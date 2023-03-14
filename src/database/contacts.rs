@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 use rusqlite::Connection;
 
-
 pub struct Contact{
-    jid: String,
-    name: String,
-    status: Option<String>
+    pub jid: String,
+    pub name: String,
+    pub status: Option<String>
 }
 
 pub fn populate(db: Connection) -> Result<HashMap<String,Contact>, String> {
