@@ -89,6 +89,8 @@ impl Chat{
         let mut stm = db_connection.prepare(query)?;
         let mut result_rows = stm.query([self.chat_row_id])?;
 
+
+
         while let Some(row) = result_rows.next()? {
             let message:Message;
 
@@ -100,5 +102,9 @@ impl Chat{
 
     pub fn get_message_by_index(&self, index: usize) -> Option<&Rc<Message>> {
         self.messages.get(index)
+    }
+
+    pub fn message_count(&self) -> usize {
+        self.messages.len()
     }
 }
