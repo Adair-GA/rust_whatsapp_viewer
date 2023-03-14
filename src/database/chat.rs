@@ -1,11 +1,13 @@
+use std::rc::Rc;
+
 use rusqlite::{Row, Error, Statement};
 
 use super::message::Message;
 
 
 #[derive(Debug)]
-pub struct Chat<'a>{
-    chat_row_id: i32,
+pub struct Chat{
+    pub chat_row_id: i32,
     // display_name: Option<String>,
     key: String,
     subject: Option<String>,
@@ -13,12 +15,12 @@ pub struct Chat<'a>{
     last_message_timestamp: i64,
     messages_sent: i32,
     messages_received: i32,
-    messages: Vec<Message<'a>>
+    messages: Vec<Rc<Message>>
 }
 
 
-impl<'a> Chat<'a> {
-    pub fn from_row(r: &Row, count_stm: &mut Statement) -> Result<Chat<'a>,Error> {
+impl Chat{
+    pub fn from_row(r: &Row, count_stm: &mut Statement) -> Result<Chat,Error> {
         // let display_name = r.get::<usize,String>(1)?;
         let key = r.get::<usize,String>(0)?;
         let subject = r.get::<usize,Option<String>>(1)?;
@@ -91,9 +93,12 @@ impl<'a> Chat<'a> {
             let message:Message;
 
             {message = Message::from_row(&row, &self.messages)?};
-            self.messages.push(message);
+            self.messages.push(Rc::new(message));
         }
         Ok(())
+    }   
 
+    pub fn get_message_by_index(&self, index: usize) -> Option<&Rc<Message>> {
+        self.messages.get(index)
     }
 }
