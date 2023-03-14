@@ -86,10 +86,11 @@ impl Chat{
     
     pub fn retrieve_messages(&mut self, db_connection: &rusqlite::Connection) -> Result<(), Error> {
         let query = "SELECT message_view.key_id, message_view.from_me, message_view.text_data, \
-        message_view.timestamp, message_location.latitude, message_location.longitude, message_view.thumb_image, message_quoted.key_id \
+        message_view.timestamp, message_location.latitude, message_location.longitude, message_quoted.key_id, message_thumbnail.thumbnail \
         FROM message_view \
         LEFT JOIN message_quoted on message_view._id = message_quoted.message_row_id \
         LEFT JOIN message_location on message_view._id = message_location.message_row_id \
+        LEFT JOIN message_thumbnail on message_view._id = message_thumbnail.message_row_id \
         WHERE message_view.chat_row_id = ? \
         ORDER BY message_view.timestamp asc";
 
@@ -97,11 +98,9 @@ impl Chat{
         let mut result_rows = stm.query([self.chat_row_id])?;
 
 
-
         while let Some(row) = result_rows.next()? {
-            let message:Message;
-
-            {message = Message::from_row(&row, &self.messages)?};
+            let message: Message;
+            message = Message::from_row(&row, &self.messages)?;
             self.messages.push(Rc::new(message));
         }
         Ok(())

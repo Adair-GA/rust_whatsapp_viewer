@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use rusqlite::{Row, Error, blob::Blob};
+use rusqlite::{Row, Error, blob};
 
 #[derive(Debug)]
 struct Media{
@@ -46,7 +46,7 @@ impl Message {
             location = None;
         }
 
-        let quoted = r.get::<usize,Option<String>>(7)?;
+        let quoted = r.get::<usize,Option<String>>(6)?;
 
         let quoted = if let Some(quoted) = quoted {
             if let Some(quoted) = Message::get_quoted_message(quoted, already_existing) {
@@ -85,6 +85,15 @@ impl Message {
     }
 
     fn build_media(r: &Row) -> Option<Media> {
-        None
+        if let Ok(blob) = r.get::<usize,Vec<u8>>(7){
+            let media_size = blob.len() as i32;
+            let media = Media{
+                media_size,
+                bytes: blob
+            };
+            Some(media)
+        }else {
+            None
+        }
     }
 }
