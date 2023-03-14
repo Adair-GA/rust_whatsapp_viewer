@@ -4,7 +4,7 @@ use super::message::Message;
 
 
 #[derive(Debug)]
-pub struct Chat{
+pub struct Chat<'a>{
     chat_row_id: i32,
     // display_name: Option<String>,
     key: String,
@@ -13,12 +13,12 @@ pub struct Chat{
     last_message_timestamp: i64,
     messages_sent: i32,
     messages_received: i32,
-    // messages: Vec<Message<'a>>
+    messages: Vec<Message<'a>>
 }
 
 
-impl Chat {
-    pub fn from_row(r: &Row, count_stm: &mut Statement) -> Result<Chat,Error> {
+impl<'a> Chat<'a> {
+    pub fn from_row(r: &Row, count_stm: &mut Statement) -> Result<Chat<'a>,Error> {
         // let display_name = r.get::<usize,String>(1)?;
         let key = r.get::<usize,String>(0)?;
         let subject = r.get::<usize,Option<String>>(1)?;
@@ -49,7 +49,7 @@ impl Chat {
             last_message_timestamp,
             messages_sent: messages_received.0,
             messages_received: messages_received.1,
-            // messages: vec![],
+            messages: vec![],
         })
     }
     
