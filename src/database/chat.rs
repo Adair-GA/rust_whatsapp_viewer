@@ -27,13 +27,14 @@ impl Chat{
         
         let creation_timestamp: Option<i64>;
 
+        // Solo crear el timestamp si no es 0
         if let Some(timestamp) = r.get::<usize,Option<i64>>(2)?{
-            if timestamp == 0 {
-                creation_timestamp = None;
-            }else {
+            if timestamp != 0 {
                 creation_timestamp = Some(timestamp);
-            }
-        }else {
+            }else {
+                creation_timestamp = None;
+            }}
+        else {
             creation_timestamp = None;
         }
 
