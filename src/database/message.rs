@@ -1,15 +1,18 @@
 use std::rc::Rc;
 
-use rusqlite::{Row, Error};
+use rusqlite::{Row, Error, blob::Blob};
+
+#[derive(Debug)]
+struct Media{
+    media_size: i32,
+    bytes : Vec<u8>
+}
 
 #[derive(Debug)]
 struct Location {
     lat: f64,
     lon: f64
 }
-
-#[derive(Debug)]
-struct Media {}
 
 #[derive(Debug)]
 pub struct Message{
@@ -81,7 +84,7 @@ impl Message {
         None
     }
 
-    fn build_media(_r: &Row) -> Option<Media> {
+    fn build_media(r: &Row) -> Option<Media> {
         None
     }
 }

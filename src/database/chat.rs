@@ -1,15 +1,15 @@
-use std::rc::Rc;
+use std::{rc::Rc, collections::HashMap};
 
 use rusqlite::{Row, Error, Statement};
 
-use super::message::Message;
+use super::{message::Message, contacts::Contact};
 
 
 #[derive(Debug)]
 pub struct Chat{
     pub chat_row_id: i32,
-    // display_name: Option<String>,
     key: String,
+    display_name: Option<String>,
     subject: Option<String>,
     creation_timestamp: Option<i64>,
     last_message_timestamp: i64,
@@ -20,13 +20,12 @@ pub struct Chat{
 
 
 impl Chat{
-    pub fn from_row(r: &Row, count_stm: &mut Statement) -> Result<Chat,Error> {
-        // let display_name = r.get::<usize,String>(1)?;
+    pub fn from_row(r: &Row, count_stm: &mut Statement, contacts: &Option<HashMap<String,Contact>>) -> Result<Chat,Error> {
         let key = r.get::<usize,String>(0)?;
         let subject = r.get::<usize,Option<String>>(1)?;
         
         let creation_timestamp: Option<i64>;
-
+        
         // Solo crear el timestamp si no es 0
         if let Some(timestamp) = r.get::<usize,Option<i64>>(2)?{
             if timestamp != 0 {
@@ -34,18 +33,25 @@ impl Chat{
             }else {
                 creation_timestamp = None;
             }}
-        else {
-            creation_timestamp = None;
-        }
-
+            else {
+                creation_timestamp = None;
+            }
+            
         let last_message_timestamp = r.get::<usize,i64>(3)?;
         let chat_row_id = r.get::<usize,i32>(4)?;
-
+        
         let messages_received = Chat::messages_count(chat_row_id,count_stm)?;
+        
+        let mut display_name: Option<String> = None;
+        if let Some(cont) = contacts {
+            if let Some(contact) = cont.get(&key) {
+                display_name = Some(contact.name.clone());
+            }
+        }
         
         Ok(Chat{
             chat_row_id,
-            // display_name,
+            display_name,
             key,
             subject,
             creation_timestamp,

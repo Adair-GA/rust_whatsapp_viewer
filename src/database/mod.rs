@@ -2,21 +2,35 @@ use std::collections::HashMap;
 
 use rusqlite;
 
-use self::chat::Chat;
+use self::{chat::Chat, contacts::Contact};
 pub mod chat;
 pub mod message;
+pub mod contacts;
 
 pub struct WaDatabase {
     connection: rusqlite::Connection,
+    contacts: Option<HashMap<String,Contact>>
 }
 
 impl WaDatabase {
-    pub fn new(path: &str) -> Result<WaDatabase, String> {
-        let connection = rusqlite::Connection::open(path).map_err(|e| e.to_string())?;
+    pub fn new(messages_path: &str) -> Result<WaDatabase, String> {
+        let connection = rusqlite::Connection::open(messages_path).map_err(|e| e.to_string())?;
+        
         Ok(WaDatabase { 
-            connection
+            connection,
+            contacts: None
          }
         )
+    }
+
+    pub fn populate_contacts(&mut self, path: &str) -> Result<(), String> {
+        if let Ok(conn) = rusqlite::Connection::open(path){
+            let contacts = contacts::populate(conn).map_err(|e| e.to_string())?;
+            self.contacts = Some(contacts);
+            Ok(())
+        }else {
+            Err(format!("Could not open database at {}", path))
+        }
     }
 
     fn has_table(&self, table_name: &str) -> Result<bool, String> {
@@ -61,7 +75,7 @@ impl WaDatabase {
         let mut result_stm = self.connection.prepare(query).map_err(|e| e.to_string())?;
         let mut result_rows = result_stm.query([]).map_err(|e| e.to_string())?;
         while let Some(row) = result_rows.next().map_err(|e| e.to_string())? {
-            chat::Chat::from_row(row, &mut message_count_stm).map(|chat| res.insert(chat.chat_row_id, chat)).map_err(|e| e.to_string())?;
+            chat::Chat::from_row(row, &mut message_count_stm, &self.contacts).map(|chat| res.insert(chat.chat_row_id, chat)).map_err(|e| e.to_string())?;
         }
         Ok(res)
         
