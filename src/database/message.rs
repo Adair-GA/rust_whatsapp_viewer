@@ -79,7 +79,7 @@ impl<'a> Message<'a> {
         None
     }
 
-    fn build_media(r: &Row) -> Option<Media> {
+    fn build_media(_r: &Row) -> Option<Media> {
         None
     }
 }
