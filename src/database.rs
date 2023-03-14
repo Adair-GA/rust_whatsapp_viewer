@@ -1,4 +1,8 @@
+use std::collections::HashMap;
+
 use rusqlite;
+
+use self::chat::Chat;
 pub mod chat;
 pub mod message;
 
@@ -38,8 +42,8 @@ impl WaDatabase {
         Ok(())
     }
 
-    pub fn get_chats(&self) -> Result<Vec<chat::Chat>, String> {
-        let mut res: Vec<chat::Chat> = Vec::new();
+    pub fn get_chats(&self) -> Result<HashMap<i32,Chat>, String> {
+        let mut res: HashMap<i32,Chat> = HashMap::new();
         
         let query = 
         "SELECT chat_view.raw_string_jid, chat_view.subject, chat_view.created_timestamp, max(message.timestamp), chat_view._id \
@@ -57,11 +61,15 @@ impl WaDatabase {
         let mut result_stm = self.connection.prepare(query).map_err(|e| e.to_string())?;
         let mut result_rows = result_stm.query([]).map_err(|e| e.to_string())?;
         while let Some(row) = result_rows.next().map_err(|e| e.to_string())? {
-            chat::Chat::from_row(row, &mut message_count_stm).map(|chat| res.push(chat)).map_err(|e| e.to_string())?;
+            chat::Chat::from_row(row, &mut message_count_stm).map(|chat| res.insert(chat.chat_row_id, chat)).map_err(|e| e.to_string())?;
         }
         Ok(res)
         
     
+    }
+
+    pub fn get_messages_of_chat(&self, chat: &mut Chat) -> Result<(), String>{
+        chat.retrieve_messages(&self.connection).map_err(|e| e.to_string())
     }
 
 }
