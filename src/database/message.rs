@@ -1,4 +1,5 @@
 use std::rc::Rc;
+use std::time::{Duration, Instant};
 
 use rusqlite::{Row, Error};
 
@@ -25,6 +26,8 @@ pub struct Message{
 
 impl Message {
     pub fn from_row(r: &Row, already_existing: &Vec<Rc<Message>>) -> Result<Message,Error> {
+
+
         let id = r.get::<usize,String>(0)?;
         let from_me = r.get::<usize,i32>(1)? == 1;
         let text_data = r.get::<usize,Option<String>>(2)?;
@@ -68,12 +71,13 @@ impl Message {
             location,
             media
         })
+        
     }
     
 
     fn get_quoted_message(quoted_id: String, already_existing: &Vec<Rc<Message>>) -> Option<&Rc<Message>> {
         let mut it = already_existing.iter().rev();
-        while let Some(ms) = it.next_back() {
+        while let Some(ms) = it.next() {
             if ms.id == quoted_id {
                 return Some(ms)
             }
